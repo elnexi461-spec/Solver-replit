@@ -11,6 +11,67 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /health:
+    get:
+      operationId: serviceHealth
+      summary: Real solver runtime readiness
+      responses:
+        "200":
+          description: Runtime ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SolverHealth"
+        "503":
+          description: Runtime not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SolverHealth"
+  /service-info:
+    get:
+      operationId: serviceInfo
+      summary: Basic public service information
+      responses:
+        "200":
+          description: Service information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceInfo"
+  /solve:
+    post:
+      operationId: solveChallenge
+      summary: Call the original solver dispatch
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SolverRequest"
+      responses:
+        "200":
+          description: Original solver result; inspect solved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SolverResult"
+        "401":
+          description: Missing or incorrect Bearer token
+        "400":
+          description: Invalid request or blocked target
+        "422":
+          description: Invalid upstream request format
+        "408":
+          description: Solver deadline exceeded; process group cleaned up
+        "429":
+          description: One solver already active; no unbounded queue
+        "503":
+          description: Browser runtime unavailable
+        "502":
+          description: Solver crashed or internal service unavailable
   /healthz:
     get:
       operationId: healthCheck
@@ -25,7 +86,83 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
+    SolverHealth:
+      type: object
+      required: [status, internal_service, browser, verified_solve, concurrency_limit, supported_types, limitations]
+      properties:
+        status: { type: string, enum: [ready, blocked, starting] }
+        internal_service: { type: boolean }
+        browser: { type: string }
+        verified_solve: { type: boolean }
+        concurrency_limit: { type: integer }
+        supported_types:
+          type: array
+          items: { type: string }
+        limitations:
+          type: array
+          items: { type: string }
+        blocker: { type: string }
+    ServiceInfo:
+      type: object
+      required: [name, authentication, solve_endpoint, health_endpoint, source, request_example]
+      properties:
+        name: { type: string }
+        authentication: { type: string }
+        solve_endpoint: { type: string }
+        health_endpoint: { type: string }
+        source: { type: string }
+        request_example:
+          $ref: "#/components/schemas/SolverRequest"
+    SolverRequest:
+      type: object
+      required: [type]
+      additionalProperties: true
+      description: All fields are validated by the original upstream Pydantic SolveRequest model. Original variant fields are forwarded unchanged.
+      properties:
+        type:
+          type: string
+          enum: [turnstile, recaptcha, hcaptcha, cloudflare, awswaf, botguard, datadome, perimeterx, akamai, aliyun]
+        url: { type: string }
+        sitekey: { type: string }
+        timeout_s: { type: integer, minimum: 1, maximum: 240, default: 60 }
+        version: { type: string }
+        real_page: { type: boolean }
+        action: { type: string }
+        cdata: { type: string }
+        proxy: { type: string }
+        enterprise: { type: boolean }
+        secret: { type: string }
+        verify_url: { type: string }
+        verify_payload: { type: object, additionalProperties: true }
+        page_url: { type: string }
+        email: { type: string }
+        password: { type: string }
+        referer: { type: string }
+        render_flow: { type: string }
+        scene_id: { type: string }
+        prefix: { type: string }
+        region: { type: string }
+        pre_actions:
+          type: array
+          items: { type: object, additionalProperties: true }
+        post_fetch:
+          type: array
+          items: { type: object, additionalProperties: true }
+    SolverResult:
+      type: object
+      additionalProperties: true
+      required: [type, solved]
+      properties:
+        type: { type: string }
+        solved: { type: boolean }
+        token: { type: string }
+        error: { type: string }
+        elapsed: { type: number }
     HealthStatus:
       type: object
       properties:
