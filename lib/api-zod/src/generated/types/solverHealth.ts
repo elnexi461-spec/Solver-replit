@@ -11,7 +11,8 @@ export interface SolverHealth {
   status: SolverHealthStatus;
   internal_service: boolean;
   browser: string;
-  verified_solve: boolean;
+  /** Whether the upstream dispatcher has returned a result during this process. */
+  dispatcher_round_trip_verified: boolean;
   concurrency_limit: number;
   supported_types: string[];
   limitations: string[];

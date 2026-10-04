@@ -31,6 +31,6 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
-app.use(solverRouter);
+app.use("/api", solverRouter);
 
 export default app;

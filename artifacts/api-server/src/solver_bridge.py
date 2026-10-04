@@ -12,6 +12,7 @@ import json
 import logging
 import re
 import sys
+from types import ModuleType
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,10 @@ def _load_upstream(root: Path) -> dict[str, Any]:
     if min(health_route, extract_function, solve_route) < 0:
         raise RuntimeError("upstream_dispatch_missing")
 
-    namespace: dict[str, Any] = {"__name__": "captcha_solver_runtime"}
+    module = ModuleType("captcha_solver_runtime")
+    module.__file__ = str(source_path)
+    sys.modules[module.__name__] = module
+    namespace: dict[str, Any] = module.__dict__
     compile(normalized[:health_route], str(source_path), "exec")
     exec(compile(normalized[:health_route], str(source_path), "exec"), namespace)
     dispatcher_source = normalized[extract_function:solve_route]

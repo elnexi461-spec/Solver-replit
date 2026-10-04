@@ -179,12 +179,12 @@ async function getRuntimeHealth(): Promise<BridgeResult> {
   return pendingProbe;
 }
 
-router.get("/", (_req, res) => {
+const serviceInfo = (_req: Request, res: Response) => {
   res.json({
     name: "Private CAPTCHA Solver API",
-    authentication: "POST /solve requires Authorization: Bearer <CAPTCHA_API_KEY>.",
-    solve_endpoint: "/solve",
-    health_endpoint: "/health",
+    authentication: "POST /api/solve requires Authorization: Bearer <CAPTCHA_API_KEY>.",
+    solve_endpoint: "/api/solve",
+    health_endpoint: "/api/health",
     source: "https://github.com/0xMissy22/captcha-solver-global",
     request_example: {
       type: "turnstile",
@@ -192,7 +192,10 @@ router.get("/", (_req, res) => {
       url: "https://your-authorized-site.example/",
     },
   });
-});
+};
+
+router.get("/", serviceInfo);
+router.get("/service-info", serviceInfo);
 
 router.get("/health", async (_req, res) => {
   const runtime = await getRuntimeHealth();

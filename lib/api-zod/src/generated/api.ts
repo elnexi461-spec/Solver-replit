@@ -15,7 +15,7 @@ export const ServiceHealthResponse = zod.object({
   "status": zod.enum(['ready', 'blocked', 'starting']),
   "internal_service": zod.boolean(),
   "browser": zod.string(),
-  "verified_solve": zod.boolean(),
+  "dispatcher_round_trip_verified": zod.boolean().describe('Whether the upstream dispatcher has returned a result during this process.'),
   "concurrency_limit": zod.number().int(),
   "supported_types": zod.array(zod.string()),
   "limitations": zod.array(zod.string()),
