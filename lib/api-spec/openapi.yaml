@@ -28,7 +28,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SolverHealth"
-  /service-info:
+  /:
     get:
       operationId: serviceInfo
       summary: Basic public service information

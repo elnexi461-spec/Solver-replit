@@ -1,0 +1,14 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "cloakbrowser>=0.5.11",
+    "fastapi>=0.142.2",
+    "numpy>=2.4.6",
+    "opencv-python>=5.0.0.93",
+    "pillow>=12.3.0",
+    "pydantic>=2.13.5",
+    "uvicorn>=0.54.0",
+]
