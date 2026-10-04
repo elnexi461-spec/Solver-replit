@@ -1,44 +1,54 @@
-# [Project name]
+# Solver-replit
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Private, authenticated HTTP API and console for the vendored CAPTCHA solver.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — build and run the API server
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required secret: `CAPTCHA_API_KEY` — Bearer token required by `POST /api/solve`; configure it in Replit Secrets, never in source or the console.
+- The Python bridge uses the locked dependencies in `pyproject.toml`/`uv.lock` and Python 3.11. Browser runtime libraries are listed in `.replit`.
+- `GET /api/healthz` is a liveness check; `GET /api/health` checks the browser runtime; `GET /api/service-info` describes the API.
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
+- Solver: Python 3.11 bridge to the vendored upstream dispatcher and CloakBrowser
+- Validation: Zod (`zod/v4`) and the upstream Pydantic request model
 - API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Build: esbuild (ESM bundle) and Vite
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/src/routes/solver.ts` — authenticated HTTP endpoints and bridge lifecycle
+- `artifacts/api-server/src/solver_bridge.py` — loads and calls the original Python dispatcher
+- `artifacts/api-server/vendor/captcha-solver-global/` — vendored upstream solver implementation
+- `artifacts/solver-console/src/` — status and API information console
+- `lib/api-spec/openapi.yaml` — API contract source of truth
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- All public API routes are under `/api`; the router is mounted at that prefix to match the Replit service path.
+- `POST /api/solve` requires a timing-safe Bearer token comparison against the server-only `CAPTCHA_API_KEY`.
+- Solver work is serialized to one browser session; bridge processes are bounded and cleaned up on timeout.
+- User-supplied target URLs are validated by the upstream dispatcher before navigation.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+The console reports transport and solver-runtime health. Authorized callers can submit supported CAPTCHA solver requests to the upstream dispatcher.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+Keep the existing repository and upstream solver integration; do not replace it with a mock or put the API key in client code.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- A healthy `/api/healthz` response only confirms the HTTP process is alive; use `/api/health` to check browser launch.
+- The API returns `503` from `/api/solve` when `CAPTCHA_API_KEY` is not configured.
+- After editing the OpenAPI contract, run the API-spec codegen command before typechecking.
 
 ## Pointers
 

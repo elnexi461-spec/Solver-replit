@@ -28,7 +28,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SolverHealth"
-  /:
+  /service-info:
     get:
       operationId: serviceInfo
       summary: Basic public service information
@@ -93,12 +93,14 @@ components:
   schemas:
     SolverHealth:
       type: object
-      required: [status, internal_service, browser, verified_solve, concurrency_limit, supported_types, limitations]
+      required: [status, internal_service, browser, dispatcher_round_trip_verified, concurrency_limit, supported_types, limitations]
       properties:
         status: { type: string, enum: [ready, blocked, starting] }
         internal_service: { type: boolean }
         browser: { type: string }
-        verified_solve: { type: boolean }
+        dispatcher_round_trip_verified:
+          type: boolean
+          description: Whether the upstream dispatcher has returned a result during this process.
         concurrency_limit: { type: integer }
         supported_types:
           type: array
